@@ -64,10 +64,10 @@ async function main() {
 
   // Employees under ICT
   const empData = [
-    { email: "dawit.tadesse@astu.edu.et", name: "Dawit Tadesse", code: "ASTU-101", position: "Software Developer", title: "Junior Developer", deptId: ictDept.id, supId: supervisor1.id },
-    { email: "sara.tesfaye@astu.edu.et", name: "Sara Tesfaye", code: "ASTU-102", position: "Systems Analyst", title: "Systems Analyst", deptId: ictDept.id, supId: supervisor1.id },
-    { email: "yonas.girma@astu.edu.et", name: "Yonas Girma", code: "ASTU-103", position: "Database Administrator", title: "DBA", deptId: ictDept.id, supId: supervisor1.id },
-    { email: "meron.alemu@astu.edu.et", name: "Meron Alemu", code: "ASTU-104", position: "IT Support Specialist", title: "IT Support", deptId: ictDept.id, supId: supervisor1.id },
+    { email: "Abdulwedud.Yassin@astu.edu.et", name: "Abdulwedud Yassin", code: "ASTU-101", position: "Software Developer", title: "Junior Developer", deptId: ictDept.id, supId: supervisor1.id },
+    { email: "Ayub.Nasir@astu.edu.et", name: "Ayub Nasir", code: "ASTU-102", position: "Systems Analyst", title: "Systems Analyst", deptId: ictDept.id, supId: supervisor1.id },
+    { email: "Abinet.girma@astu.edu.et", name: "Abinet Girma", code: "ASTU-103", position: "Database Administrator", title: "DBA", deptId: ictDept.id, supId: supervisor1.id },
+    { email: "Salahudin.Kadi@astu.edu.et", name: "Salahudin Kadi", code: "ASTU-104", position: "IT Support Specialist", title: "IT Support", deptId: ictDept.id, supId: supervisor1.id },
     // HR employees
     { email: "hana.worku@astu.edu.et", name: "Hana Worku", code: "ASTU-201", position: "HR Officer", title: "HR Officer", deptId: hrDept.id, supId: supervisor2.id },
     { email: "bereket.sisay@astu.edu.et", name: "Bereket Sisay", code: "ASTU-202", position: "Recruitment Specialist", title: "Recruitment Specialist", deptId: hrDept.id, supId: supervisor2.id },
