@@ -262,7 +262,7 @@ export default function NewEvaluationPage() {
               index={kpa.index}
               label={kpa.label}
               weight={kpa.weight}
-              weightPercent={kpa.weightPercent ?? Math.round(kpa.weight * 100)}
+              weightPercent={Math.round(kpa.weight * 100)}
               score={kpaScores[kpa.index] ?? 0}
               weightedPoint={result?.kpaItems.find((i) => i.kpaIndex === kpa.index)?.weightedPoint ?? 0}
               onChange={(v) => setKpaScores((prev) => ({ ...prev, [kpa.index]: v }))}

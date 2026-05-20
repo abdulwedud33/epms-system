@@ -16,6 +16,7 @@ const createEmployeeSchema = z.object({
   supervisorId: z.string().optional().nullable(),
   hireDate: z.string().datetime(),
   phone: z.string().optional().nullable(),
+  isActive: z.boolean().optional(),
 });
 
 const updateEmployeeSchema = createEmployeeSchema.partial().omit({ password: true, email: true });
