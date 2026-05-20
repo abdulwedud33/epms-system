@@ -195,7 +195,7 @@ async function main() {
   console.log("Default credentials:");
   console.log("  Admin:      admin@astu.edu.et     / admin123");
   console.log("  Supervisor: abebe.bekele@astu.edu.et / super123");
-  console.log("  Employee:   dawit.tadesse@astu.edu.et / emp123");
+  console.log("  Employee:   Abdulwedud.Yassin@astu.edu.et / emp123");
 }
 
 main()

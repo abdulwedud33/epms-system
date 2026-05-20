@@ -1,0 +1,22 @@
+{
+  // Disable built-in TypeScript/JavaScript validation to remove editor red squiggles
+  "typescript.validate.enable": false,
+  "javascript.validate.enable": false,
+
+  // If you use the ESLint extension and want to hide lint errors in the editor, set this to false
+  "eslint.enable": false,
+
+  // Hide common generated folders from Explorer to reduce noise
+  "files.exclude": {
+    "**/.next": true,
+    "**/dist": true,
+    "**/node_modules": true
+  },
+
+  // Reduce search noise
+  "search.exclude": {
+    "**/.next": true,
+    "**/dist": true,
+    "**/node_modules": true
+  }
+}
