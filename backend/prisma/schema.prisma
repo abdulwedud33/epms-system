@@ -1,0 +1,233 @@
+// ============================================================
+// EPMS – Employee Performance Management System
+// Prisma Schema for PostgreSQL (Neon)
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  SUPERVISOR
+  EMPLOYEE
+}
+
+enum EvaluationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum EvaluationPeriod {
+  Q1
+  Q2
+  Q3
+  Q4
+  ANNUAL
+  MIDYEAR
+}
+
+// ─── User (Auth) ──────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  password      String    // bcrypt hashed
+  role          Role      @default(EMPLOYEE)
+  avatar        String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  employee      Employee?
+
+  @@map("users")
+}
+
+// ─── Department ───────────────────────────────────────────────────────────────
+
+model Department {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  code        String     @unique
+  description String?
+  headId      String?    // Employee who heads this dept
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  employees   Employee[]
+
+  @@map("departments")
+}
+
+// ─── Employee ─────────────────────────────────────────────────────────────────
+
+model Employee {
+  id              String      @id @default(cuid())
+  userId          String      @unique
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  employeeCode    String      @unique  // e.g. EMP-001
+  fullName        String
+  position        String
+  jobTitle        String
+  departmentId    String
+  department      Department  @relation(fields: [departmentId], references: [id])
+
+  supervisorId    String?     // Self-referential: immediate supervisor
+  supervisor      Employee?   @relation("SupervisorSubordinates", fields: [supervisorId], references: [id])
+  subordinates    Employee[]  @relation("SupervisorSubordinates")
+
+  hireDate        DateTime
+  isActive        Boolean     @default(true)
+  phone           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Evaluations this employee received (as evaluatee)
+  evaluationsReceived Evaluation[] @relation("EvaluateeEvaluations")
+  // Evaluations this employee conducted (as supervisor/evaluator)
+  evaluationsGiven    Evaluation[] @relation("EvaluatorEvaluations")
+
+  @@map("employees")
+}
+
+// ─── Evaluation (Main Record) ─────────────────────────────────────────────────
+// Represents one full performance review cycle for an employee
+
+model Evaluation {
+  id              String            @id @default(cuid())
+
+  // Who is being evaluated
+  evaluateeId     String
+  evaluatee       Employee          @relation("EvaluateeEvaluations", fields: [evaluateeId], references: [id])
+
+  // Who is doing the evaluation (supervisor)
+  evaluatorId     String
+  evaluator       Employee          @relation("EvaluatorEvaluations", fields: [evaluatorId], references: [id])
+
+  period          EvaluationPeriod
+  year            Int               // e.g. 2024
+  status          EvaluationStatus  @default(DRAFT)
+
+  // ── Part A: Technical KPA (70%) ────────────────────────────────────────────
+  // 6 KPA scores stored as related records
+  kpaScores       KpaScore[]
+
+  // Calculated Part A totals (persisted for reporting)
+  partA_overallResult   Float?  // sum of weighted points (out of 40 max)
+  partA_averagePoint    Float?  // overall result × 2.5 → percentage out of 100
+
+  // ── Part B: Behavioral Assessment (30%) ────────────────────────────────────
+  behavioralScores      BehavioralScore[]
+
+  // B1 Self Assessment (5%)
+  partB1_total          Float?  // weighted total for B1 section
+  partB1_weighted       Float?  // partB1_total × 0.05
+
+  // B2 Supervisor Behavioral Assessment (10%)
+  partB2_total          Float?  // weighted total for B2 section
+  partB2_weighted       Float?  // partB2_total × 0.10
+
+  // B3 Additional 15% (1–5 score, flexible)
+  partB3_rawScore       Float?  // raw score 1–5 (or aggregate)
+  partB3_weighted       Float?  // normalized to 15%
+
+  // ── Final Score ─────────────────────────────────────────────────────────────
+  // partA_weighted (70%) + partB1_weighted (5%) + partB2_weighted (10%) + partB3_weighted (15%)
+  finalScore            Float?  // out of 100
+
+  // Rating label derived from finalScore
+  ratingLabel           String? // e.g. "Excellent", "Very Good", "Good", "Poor"
+
+  // Workflow
+  supervisorComments    String?
+  employeeComments      String?  // employee's response/acknowledgment
+  submittedAt           DateTime?
+  reviewedAt            DateTime?
+  approvedAt            DateTime?
+  approvedById          String?  // admin who approved
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([evaluateeId, period, year])  // one evaluation per employee per period/year
+  @@map("evaluations")
+}
+
+// ─── KpaScore ─────────────────────────────────────────────────────────────────
+// Stores score for each of the 6 fixed KPA items (Part A)
+
+model KpaScore {
+  id              String     @id @default(cuid())
+  evaluationId    String
+  evaluation      Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+
+  // KPA index 1–6 matching the fixed list in the system
+  kpaIndex        Int        // 1 through 6
+  kpaLabel        String     // stored label for historical accuracy
+  weight          Float      // e.g. 0.25 for 25%
+  score           Int        // 1–4 scale (1=Unsatisfactory, 2=Needs Improvement, 3=Meets Expectations, 4=Exceeds Expectations)
+  weightedPoint   Float      // score × weight × 10 (to match original form's scale)
+
+  // Optional supervisor notes per KPA
+  notes           String?
+
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@unique([evaluationId, kpaIndex])
+  @@map("kpa_scores")
+}
+
+// ─── BehavioralScore ──────────────────────────────────────────────────────────
+// Stores scores for the 6 behavioral competencies, for each assessor type
+
+model BehavioralScore {
+  id              String     @id @default(cuid())
+  evaluationId    String
+  evaluation      Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+
+  // "SELF" = B1, "SUPERVISOR" = B2, "PEER" = B3
+  assessorType    String     // "SELF" | "SUPERVISOR" | "PEER"
+
+  // For B1 and B2: competency index 1–6
+  // For B3: null (single overall score)
+  competencyIndex Int?
+  competencyLabel String?
+  weight          Float?     // competency weight within this section (e.g. 0.25 for 25%)
+  score           Int        // B1/B2: 1–4 scale; B3: 1–5 scale
+  weightedPoint   Float?     // score × weight (within section)
+
+  notes           String?
+
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@map("behavioral_scores")
+}
+
+// ─── AuditLog ─────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  action      String   // e.g. "EVALUATION_SUBMITTED", "SCORE_UPDATED"
+  entityType  String   // "Evaluation" | "Employee" etc.
+  entityId    String
+  details     Json?
+  createdAt   DateTime @default(now())
+
+  @@map("audit_logs")
+}
