@@ -150,7 +150,7 @@ export default function LoginPage() {
                 {[
                   { role: "Admin", email: "admin@astu.edu.et", pass: "admin123" },
                   { role: "Supervisor", email: "abebe.bekele@astu.edu.et", pass: "super123" },
-                  { role: "Employee", email: "dawit.tadesse@astu.edu.et", pass: "emp123" },
+                  { role: "Employee", email: "Abdulwedud.Yassin@astu.edu.et", pass: "emp123" },
                 ].map((c) => (
                   <button key={c.role} onClick={() => { setEmail(c.email); setPassword(c.pass); }}
                     className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-left border border-white/10">
